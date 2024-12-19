@@ -31,10 +31,6 @@ func main() {
 	} else if os.Args[1] == "renew" {
 		renewCertificate()
 	}
-	// outputFile := "fullchain_cleaned.pem"
-	// outputFile = path.Join(certdir, outputFile)
-	// inputFile = path.Join(certdir, inputFile)
-
 }
 
 func listing() {
@@ -83,34 +79,6 @@ func listing() {
 	}
 
 	fmt.Printf("perfect certificates have been written to %s\n", perfectcertsFilePath)
-}
-
-// hasDuplicateEntry checks if there are duplicate certificate entries in the given PEM file.
-func hasDuplicateEntry(pemFilePath string) bool {
-	hasDuplicateEntry := false
-	data, err := os.ReadFile(pemFilePath)
-	if err != nil {
-		fmt.Println("Error reading file:", err)
-		return false
-	}
-
-	certificates := bytes.Split(data, []byte("-----END CERTIFICATE-----"))
-	uniqueCerts := make(map[string]bool)
-
-	for _, cert := range certificates {
-		if len(cert) > 0 && !isWhitespace(cert) {
-			cert = append(cert, []byte("-----END CERTIFICATE-----")...)
-			certStr := string(cert)
-			if !uniqueCerts[certStr] {
-				uniqueCerts[certStr] = true
-			} else {
-				hasDuplicateEntry = true
-				break
-			}
-		}
-	}
-
-	return hasDuplicateEntry
 }
 
 func cleanup() {
@@ -164,37 +132,6 @@ func cleanup() {
 		}
 
 		fmt.Printf("Cleaned certificates have been written to %s\n", inputfile)
-		// sourceInfo, err := os.Stat(inputfile)
-		// if err != nil {
-		// 	fmt.Println("Error getting source file info:", err)
-		// 	return
-		// }
-
-		// Get the permissions of the source file
-		// sourcePerm := sourceInfo.Mode().Perm()
-
-		// oldFullChainPath := filepath.Join(trimmedLine, old_fullchain)
-		// err = os.Rename(inputfile, oldFullChainPath)
-		// if err == nil {
-		// 	log.Printf(inputfile + " backed up in " + oldFullChainPath)
-		// } else {
-		// 	log.Printf("error while backing up "+inputfile, err)
-		// }
-
-		// err = os.Rename(outputFile, inputfile)
-		// if err == nil {
-		// 	log.Printf(inputfile + " restored from " + outputFile)
-		// } else {
-		// 	log.Printf("error while restoring "+inputfile, err)
-		// }
-
-		// err = os.Chmod(inputfile, sourcePerm)
-		// if err != nil {
-		// 	fmt.Println("Error setting target file permissions:", err)
-		// 	return
-		// }
-
-		// fmt.Println("Permissions updated successfully")
 	}
 
 	// Check for any errors during scanning
@@ -203,17 +140,6 @@ func cleanup() {
 	}
 
 }
-
-// isWhitespace checks if the given byte slice is only whitespace.
-func isWhitespace(data []byte) bool {
-	for _, b := range data {
-		if b != ' ' && b != '\n' && b != '\t' {
-			return false
-		}
-	}
-	return true
-}
-
 func renewCertificate() {
 	// Open the file
 	file, err := os.Open(dulicateCertListFilePath)
@@ -242,9 +168,45 @@ func renewCertificate() {
 			log.Printf("failed to send request: %v", err)
 		}
 		defer resp.Body.Close()
+		log.Printf("status code: %d", resp.StatusCode)
 
-		if resp.StatusCode != http.StatusOK {
-			log.Printf("unexpected status code: %d", resp.StatusCode)
+	}
+}
+
+// isWhitespace checks if the given byte slice is only whitespace.
+func isWhitespace(data []byte) bool {
+	for _, b := range data {
+		if b != ' ' && b != '\n' && b != '\t' {
+			return false
 		}
 	}
+	return true
+}
+
+// hasDuplicateEntry checks if there are duplicate certificate entries in the given PEM file.
+func hasDuplicateEntry(pemFilePath string) bool {
+	hasDuplicateEntry := false
+	data, err := os.ReadFile(pemFilePath)
+	if err != nil {
+		fmt.Println("Error reading file:", err)
+		return false
+	}
+
+	certificates := bytes.Split(data, []byte("-----END CERTIFICATE-----"))
+	uniqueCerts := make(map[string]bool)
+
+	for _, cert := range certificates {
+		if len(cert) > 0 && !isWhitespace(cert) {
+			cert = append(cert, []byte("-----END CERTIFICATE-----")...)
+			certStr := string(cert)
+			if !uniqueCerts[certStr] {
+				uniqueCerts[certStr] = true
+			} else {
+				hasDuplicateEntry = true
+				break
+			}
+		}
+	}
+
+	return hasDuplicateEntry
 }
