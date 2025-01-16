@@ -1,6 +1,0 @@
-{
-    "AppLogDirMap": {
-        "e2-node-controller": "/var/log/e2",
-        "idrive-e2-cert-manager": "/var/log/letsencrypt"
-    }
-}
